@@ -4,7 +4,7 @@ Donate link: http://www.solamentegratis.it/wordpress-search-plugin-in-or-conditi
 Tags: mysql, database, search, or,where
 Requires at least: 1.0
 Tested up to: 1.0
-Stable tag: 1.0
+Stable tag: 1.1
 
 Adjust your conditional "OR" operator on the wp search query
 
@@ -31,10 +31,12 @@ Copyright (c) 2011 solamentegratis.it
 
 == Changelog ==
 
-= 1.0 =
+= 1.1 =
+Added the possibility to exclude specifics words from research
 
 == Upgrade Notice ==
 
-= 1.0 =
+= 1.1 =
+Added the possibility to exclude specifics words from research
 
 == Arbitrary section ==

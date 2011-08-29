@@ -16,7 +16,7 @@ if (!class_exists("sgSearchInORcondition")) {
     //Returns an array of admin options
     function getAdminOptions() {      
         //opzioni di default sul db
-       $devloungeAdminOptions = array('min_lenght' => '4', 'search_type' => '2','splitter' => ' ');
+       $devloungeAdminOptions = array('min_lenght' => '4', 'search_type' => '2','splitter' => ' ','exclude' => 'from,where,when');
  
      $devOptions = get_option($this->adminOptionsName);
      
@@ -30,8 +30,9 @@ if (!class_exists("sgSearchInORcondition")) {
     
     function init() {
       $this->getAdminOptions();
-    }
-      
+    } 
+    
+    
   function posts_where( $where ) {
     //stringaricerca
     $stringaricerca="";
@@ -42,6 +43,7 @@ if (!class_exists("sgSearchInORcondition")) {
   		  $min_lenght="4";
   		  $search_type="2";
   		  $splitter=" ";
+  		  $exclude="from,where,when";
            
   	     //retrieve the admin storage option
         $devOptions = $this->getAdminOptions();
@@ -55,39 +57,46 @@ if (!class_exists("sgSearchInORcondition")) {
         if ($devOptions['splitter']!="") { 
           $splitter=$devOptions['splitter'];
         }
+        if ($devOptions['exclude']!="") { 
+          $exclude=$devOptions['exclude'];
+        }
+ 
  
   		  $strrequest=explode($splitter, $_GET['s']) ;
   		  $where="AND ( ";
   
-  		  foreach ($strrequest as $element) {
+         
+        
+  		  foreach ($strrequest as $element) {  
           $conta++;
  
   		    if (strlen($element)>= intval($min_lenght)){
-  		      //echo($element."-".strlen($element));
-            if ($conta==1){
-              if ($search_type==1){
-                $where.=" ((wp_posts.post_title LIKE '".$element."') OR (wp_posts.post_content LIKE '".$element."'))";
+            if (strpos($exclude.",",$element.",")=== false){
+    		      //echo($element."-".strlen($element));
+              if ($conta==1){
+                if ($search_type==1){
+                  $where.=" ((wp_posts.post_title LIKE '".$element."') OR (wp_posts.post_content LIKE '".$element."'))";
+                }
+                if ($search_type==2){
+                  $where.=" ((wp_posts.post_title LIKE '% ".$element." %') OR (wp_posts.post_content LIKE '% ".$element." %') OR (wp_posts.post_title LIKE '%".$element." %') OR (wp_posts.post_content LIKE '%".$element." %') OR  (wp_posts.post_title LIKE '%".$element." %') OR (wp_posts.post_content LIKE '%".$element." %'))";
+                }
+                if ($search_type==3){
+                  $where.=" ((wp_posts.post_title LIKE '%".$element."%') OR (wp_posts.post_content LIKE '%".$element."%'))";
+                }
+                
+              }else{
+                if ($search_type==1){
+                  $where.=" OR ((wp_posts.post_title LIKE '".$element."') OR (wp_posts.post_content LIKE '".$element."')) ";
+                }
+                if ($search_type==2){
+                  $where.=" OR ((wp_posts.post_title LIKE '% ".$element." %') OR (wp_posts.post_content LIKE '% ".$element." %') OR (wp_posts.post_title LIKE '%".$element." %') OR (wp_posts.post_content LIKE '%".$element." %') OR (wp_posts.post_title LIKE '%".$element." %') OR (wp_posts.post_content LIKE '%".$element." %')) ";
+                }
+                if ($search_type==3){
+                  $where.=" OR ((wp_posts.post_title LIKE '%".$element."%') OR (wp_posts.post_content LIKE '%".$element."%')) ";
+                }
               }
-              if ($search_type==2){
-                $where.=" ((wp_posts.post_title LIKE '% ".$element." %') OR (wp_posts.post_content LIKE '% ".$element." %') OR (wp_posts.post_title LIKE '%".$element." %') OR (wp_posts.post_content LIKE '%".$element." %') OR  (wp_posts.post_title LIKE '%".$element." %') OR (wp_posts.post_content LIKE '%".$element." %'))";
-              }
-              if ($search_type==3){
-                $where.=" ((wp_posts.post_title LIKE '%".$element."%') OR (wp_posts.post_content LIKE '%".$element."%'))";
-              }
-              
-            }else{
-              if ($search_type==1){
-                $where.=" OR ((wp_posts.post_title LIKE '".$element."') OR (wp_posts.post_content LIKE '".$element."')) ";
-              }
-              if ($search_type==2){
-                $where.=" OR ((wp_posts.post_title LIKE '% ".$element." %') OR (wp_posts.post_content LIKE '% ".$element." %') OR (wp_posts.post_title LIKE '%".$element." %') OR (wp_posts.post_content LIKE '%".$element." %') OR (wp_posts.post_title LIKE '%".$element." %') OR (wp_posts.post_content LIKE '%".$element." %')) ";
-              }
-              if ($search_type==3){
-                $where.=" OR ((wp_posts.post_title LIKE '%".$element."%') OR (wp_posts.post_content LIKE '%".$element."%')) ";
-              }
-              
-            }
-          }
+            } 
+          }  
         }
         if ($conta==0){
           //set a default condition to satisfy and condition
@@ -121,13 +130,17 @@ if (!class_exists("sgSearchInORcondition")) {
     if (isset($_POST['SearchInORcondition_splitter'])) {
       $devOptions['splitter'] = $_POST['SearchInORcondition_splitter'];
     }  
+    if (isset($_POST['SearchInORcondition_exclude'])) {
+      $devOptions['exclude'] = $_POST['SearchInORcondition_exclude'];
+    }  
     
     
     update_option($this->adminOptionsName, $devOptions);    
     
 ?>
   <div class="updated"><p><strong><?php _e("Settings Updated.", "SearchInORcondition");?></strong></p></div>
-<?php }?>  
+<?php }?>
+<p style="margin-left:0px;" id="ll"><a href="http://www.solamentegratis.it/laboratorio" target="_blank"><em>sgSearchInORcondition</em> by Solamente Gratis Lab</a></p>  
   <div class="wrap">
   <form method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
     <h2>SolamenteGratis Plugin Series</h2>
@@ -142,18 +155,21 @@ if (!class_exists("sgSearchInORcondition")) {
       <li>Example 2: "comet" -> <b>found</b>; " come" --> <b>found</b>; " tcome " --> <b>found</b>; " tcomet " --> <b>not found</b></li>
       <li>Example 3: "comet" -> <b>found</b>; " come" --> <b>found</b>; " tcome " --> <b>found</b>; " tcomet " --> <b>found</b></li>
     <ul>
-    <select name="SearchInORcondition_searchtype">
-      <option value="1" <?php selected("1", $devOptions['search_type'] ); ?>>Search only for the exact word (example 1)</option>
-      <option value="2" <?php selected("2", $devOptions['search_type'] ); ?>>Search for the exact word or where it start or end with it (example 2)</option>
-      <option value="3" <?php selected("3", $devOptions['search_type'] ); ?>>Search for everything contains the word in any position (example 3)</option>
-    </select>
-     <h3>Set the value to use to split tue querystring (deafult=" ")</h3>
-    <input type="text" name="SearchInORcondition_splitter" value="<?php echo $devOptions['splitter'];?>">
-    
+      <select name="SearchInORcondition_searchtype">
+        <option value="1" <?php selected("1", $devOptions['search_type'] ); ?>>Search only for the exact word (example 1)</option>
+        <option value="2" <?php selected("2", $devOptions['search_type'] ); ?>>Search for the exact word or where it start or end with it (example 2)</option>
+        <option value="3" <?php selected("3", $devOptions['search_type'] ); ?>>Search for everything contains the word in any position (example 3)</option>
+      </select>
+     <h3>Set the value to use to split the querystring (deafult=" " blank)</h3>
+      <input type="text" name="SearchInORcondition_splitter" value="<?php echo $devOptions['splitter'];?>" size="5">
+     <h3>Exclude this words from search (comma separator)</h3>
+     <input type="text" name="SearchInORcondition_exclude" value="<?php echo $devOptions['exclude'];?>" size="200">
 
   <div class="submit"><input type="submit" name="update_SearchInORconditionSettings" value="<?php _e('Update Settings', 'SearchInORcondition') ?>" /></div>
   </form>
   </div>
+  
+  <p style="margin-left:0px;" id="ll"><a href="http://www.solamentegratis.it/laboratorio" target="_blank"><em>sgSearchInORcondition</em> by Solamente Gratis Lab</a></p>
   <?php
   }
   
