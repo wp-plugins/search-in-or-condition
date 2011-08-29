@@ -2,7 +2,7 @@
 Contributors: superesse
 Donate link: http://www.solamentegratis.it/wordpress-search-plugin-in-or-condition.html
 Tags: mysql, database, search, or,where
-Requires at least: 1.0
+Requires at least: 1.1
 Tested up to: 1.0
 Stable tag: 1.1
 
